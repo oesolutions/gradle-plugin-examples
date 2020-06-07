@@ -1,11 +1,9 @@
+apply(from = "../examples.gradle.kts")
+
 plugins {
     testing
     `java-gradle-plugin`
 }
-apply(from = "../wrapper.gradle.kts")
-
-group = "com.github.oesolutions.gradle.plugin.examples"
-version = "1.0"
 
 repositories {
     jcenter()

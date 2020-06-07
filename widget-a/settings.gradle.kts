@@ -1,2 +1,3 @@
+apply(from = "../examples.settings.gradle.kts")
+
 rootProject.name = "widget-a"
-includeBuild("../widget-plugin")
