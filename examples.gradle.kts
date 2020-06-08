@@ -14,6 +14,7 @@ configure<PublishingExtension> {
 }
 
 tasks.named<Wrapper>("wrapper") {
-    distributionType = Wrapper.DistributionType.ALL
     gradleVersion = "${project.extra["wrapper.version"]}"
+    distributionType = Wrapper.DistributionType.valueOf("${project.extra["wrapper.type"]}")
+    distributionSha256Sum = "${project.extra["wrapper.checksum"]}"
 }
