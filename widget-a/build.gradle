@@ -1,0 +1,5 @@
+plugins {
+    id 'com.github.oesolutions.widget'
+}
+
+apply from: '../examples.gradle'

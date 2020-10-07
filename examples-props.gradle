@@ -1,0 +1,20 @@
+def examplesPropsFile = lookupFile( rootDir, 'examples.properties' )
+def fis = new FileInputStream( examplesPropsFile )
+def props = new Properties()
+fis.withCloseable {
+    props.load( it )
+}
+
+props.stringPropertyNames().each {
+    ext.set( it, props.getProperty( it ) )
+}
+
+if( !ext.has( 'wrapper.version' ) )
+{
+    ext.'wrapper.version' = ext.'examples.version'
+}
+ext.'localRepo.path' = new File( examplesPropsFile.parentFile, ext.'localRepo.name' ).absolutePath
+if( !ext.has( 'wrapper.version' ) )
+{
+    ext.'wrapper.version' = ext.'examples.version'
+}

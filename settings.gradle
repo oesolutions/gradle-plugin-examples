@@ -1,0 +1,100 @@
+apply from: 'examples.settings.gradle'
+
+rootProject.name = 'gradle-plugin-examples'
+
+DAG<String> includedBuildDAG = new DAG<String>()
+( (String) ( ext.'examples.projects' ) ).split( ' ' ).each { String proj ->
+    def depProp = "examples.${proj}.includedBuilds"
+    if( ext.has( depProp ) )
+    {
+        includedBuildDAG.addNode( proj, ( (String) ext.get( depProp ) ).split( ' ' ) )
+    }
+    else
+    {
+        includedBuildDAG.addNode( proj, [] as String[] )
+    }
+}
+try
+{
+    includedBuildDAG.tsort().each { ib ->
+        includeBuild( ib )
+    }
+}
+catch( DAG.DAGLoopException e )
+{
+    throw new RuntimeException(
+            "Detected included build dependency loop (${e.items.join( '->' )}). Check examples.properties", e )
+}
+
+
+/**
+ * A basic DAG with topological sort.
+ * <p>
+ * TSORT based on <a href="https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search">Wikipedia</a>
+ *
+ * @param <T >    DAG node type
+ */
+class DAG<T>
+{
+    private Map<T, List<T>> nodes = new HashMap<>()
+
+    void addNode( T node, T... deps )
+    {
+        nodes.put( node, Arrays.asList( deps ) )
+    }
+
+    Collection<T> tsort()
+    {
+        Map<T, Mark> visited = nodes.keySet().collectEntries { k ->
+            [k, Mark.NONE]
+        } as Map<T, Mark>
+        List<T> sorted = new ArrayList<>()
+        nodes.keySet().each { d ->
+            if( visited.get( d ) == Mark.NONE )
+            {
+                visit( visited, d, sorted )
+            }
+        }
+        return sorted
+    }
+
+    private void visit( Map<T, Mark> visited, T node, List<T> sorted )
+    {
+        if( visited.get( node ) == Mark.PERM )
+        {
+            return
+        }
+        if( visited.get( node ) == Mark.TEMP )
+        {
+            throw new DAGLoopException( [node] )
+        }
+        visited.put( node, Mark.TEMP )
+        nodes.get( node ).each { dep ->
+            try
+            {
+                visit( visited, dep, sorted )
+            }
+            catch( DAGLoopException e )
+            {
+                throw new DAGLoopException( [node] + e.items )
+            }
+        }
+        visited.put( node, Mark.PERM )
+        sorted.add( node )
+    }
+
+    private static enum Mark {
+        NONE, TEMP, PERM
+    }
+
+    static class DAGLoopException<T> extends RuntimeException
+    {
+        final Collection<T> items
+
+        DAGLoopException( Collection<T> items )
+        {
+            super( "DAG loop: ${items.join( '->' )}" )
+            this.items = items
+        }
+    }
+}

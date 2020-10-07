@@ -1,0 +1,27 @@
+ext.lookupFile = { File start, String name ->
+    File found = null
+    while( start != null )
+    {
+        found = new File( start, name )
+        if( found.isFile() )
+        {
+            break
+        }
+        start = start.parentFile
+    }
+    return found
+}
+
+apply from: lookupFile( rootDir, 'examples-props.gradle' )
+
+settings.pluginManagement {
+    repositories {
+        maven {
+            url = uri( settings.ext.'localRepo.path' )
+        }
+        gradlePluginPortal()
+    }
+    plugins {
+        id( 'com.github.oesolutions.widget' ) version( settings.ext.'examples.version' )
+    }
+}

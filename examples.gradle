@@ -1,0 +1,36 @@
+ext.lookupFile = { File start, String name ->
+    File found = null
+    while( start != null )
+    {
+        found = new File( start, name )
+        if( found.isFile() )
+        {
+            break
+        }
+        start = start.parentFile
+    }
+    return found
+}
+
+apply from: lookupFile( rootDir, 'examples-props.gradle' )
+apply plugin: 'base'
+
+group = 'com.github.oesolutions.gradle-plugin-examples'
+version = ext.'examples.version'
+
+pluginManager.withPlugin( 'maven-publish' ) {
+    publishing {
+        repositories {
+            maven {
+                name = 'ExamplesLocal'
+                url = uri( project.ext.'localRepo.path' )
+            }
+        }
+    }
+}
+
+tasks.named( 'wrapper' ) {
+    gradleVersion = project.ext.'wrapper.version'
+    distributionType = Wrapper.DistributionType.valueOf( project.ext.'wrapper.type' )
+    distributionSha256Sum = project.ext.'wrapper.checksum'
+}

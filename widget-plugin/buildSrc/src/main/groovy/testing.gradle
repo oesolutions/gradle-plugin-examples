@@ -1,0 +1,42 @@
+plugins {
+    id 'groovy'
+}
+
+def spock = configurations.create( 'spock' ) {
+    description = 'Spock Framework dependencies'
+    canBeConsumed = false
+    canBeResolved = false
+}
+
+configurations.testImplementation.extendsFrom( spock )
+
+['integration', 'functional'].each { name ->
+    def srcSetName = "${name}Test"
+    def srcSet = sourceSets.create( srcSetName ) {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+    configurations.named( srcSet.implementationConfigurationName ) {
+        extendsFrom( configurations.implementation )
+        extendsFrom( spock )
+    }
+    configurations.named( srcSet.runtimeOnlyConfigurationName ) {
+        extendsFrom( configurations.runtimeOnly )
+    }
+    tasks.register( srcSetName, Test ) {
+        description = "Runs the ${name} tests."
+        group = 'verification'
+
+        testClassesDirs = srcSet.output.classesDirs
+        classpath = srcSet.runtimeClasspath
+    }
+}
+
+pluginManager.withPlugin( 'java-gradle-plugin' ) {
+    extensions.getByType( GradlePluginDevelopmentExtension ).
+            testSourceSets( project.sourceSets['functionalTest'] )
+}
+
+tasks.named( 'check' ) {
+    dependsOn( 'integrationTest' )
+}

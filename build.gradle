@@ -1,0 +1,11 @@
+apply from: 'examples.gradle'
+
+['build', 'clean', 'wrapper', 'buildEnvironment'].each { taskName ->
+    tasks.named( taskName ) {
+        dependsOn( gradle.includedBuilds.collect { it.task( ":${taskName}" ) } )
+    }
+}
+
+tasks.named( 'clean', Delete ) {
+    delete( project.ext.'localRepo.path' )
+}
